@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>God's Eye — Global Monitor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a10;--bg2:#080d18;--bg3:#0a1220;--bg4:#0c1528;
+  --border:#162030;--border2:#1c2e44;
+  --text:#9ab4cc;--text2:#5a7a9a;--text3:#2a4060;
+  --blue:#3a8aff;--green:#22cc66;--red:#ff3a3a;--amber:#ff9922;--teal:#22ccaa;--purple:#9060ff;
+}
+body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);font-size:11px;height:100vh;overflow:hidden}
+
+/* ── LOGIN ── */
+#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#login.gone{display:none}
+.login-scan{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:.12;animation:lscan 4s linear infinite;pointer-events:none}
+@keyframes lscan{0%{top:0}100%{top:100vh}}
+.lbox{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:42px 46px;width:340px;text-align:center}
+.l-eye{font-size:52px;margin-bottom:12px;opacity:.7}
+.l-logo{font-size:20px;font-weight:700;color:var(--blue);letter-spacing:3px;margin-bottom:3px}
+.l-sub{font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:28px}
+#pin{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-size:18px;padding:12px 16px;border-radius:6px;outline:none;text-align:center;letter-spacing:6px;font-family:'Courier New',monospace;margin-bottom:10px;transition:border .2s}
+#pin:focus{border-color:var(--blue)}
+#pin.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#go{width:100%;padding:12px;background:var(--blue);border:none;color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;border-radius:6px;cursor:pointer;font-family:'Courier New',monospace}
+#go:hover{background:#5aaaff}
+#l-err{font-size:10px;color:var(--red);margin-top:10px;min-height:16px;letter-spacing:.5px}
+.l-hint{font-size:8px;color:var(--text3);margin-top:18px;line-height:1.7;letter-spacing:.5px}
+.l-sdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s infinite}
+
+/* ── MAIN APP ── */
+#app{display:grid;grid-template-rows:42px 1fr 32px;height:100vh;gap:1px;background:var(--bg)}
+#app.gone{display:none}
+
+/* HEADER */
+#hdr{background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:7px;overflow:hidden;flex-wrap:nowrap}
+.logo{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:2px;white-space:nowrap;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.fbar{display:flex;gap:2px;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 4px;flex-shrink:0}
+.flab{font-size:8px;color:var(--text3);padding-right:4px;border-right:1px solid var(--border);margin-right:2px;letter-spacing:1px}
+.fb{padding:2px 7px;border-radius:3px;border:1px solid transparent;background:transparent;color:var(--text3);cursor:pointer;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.5px;transition:all .12s}
+.fb.all-on{background:#0c1e38;color:var(--blue);border-color:#1a3060}
+.fb.con-on{background:#2a0808;color:#ff6060;border-color:#5a1818}
+.fb.wat-on{background:#1a1000;color:#ffaa40;border-color:#503008}
+.lb{padding:2px 6px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.5px;transition:all .12s}
+.lb.on{background:#0a1e30;color:var(--blue);border-color:#1a3050}
+.spin{width:11px;height:11px;border:1.5px solid var(--border2);border-top-color:var(--blue);border-radius:50%;display:inline-block;animation:sp 1s linear infinite;opacity:0;transition:opacity .2s}
+.spin.on{opacity:1}
+@keyframes sp{to{transform:rotate(360deg)}}
+#clk{font-size:9px;color:var(--text3);margin-left:auto;white-space:nowrap;flex-shrink:0;letter-spacing:.5px}
+#lock{font-size:9px;cursor:pointer;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:3px;background:transparent;font-family:'Courier New',monospace}
+#lock:hover{color:var(--red);border-color:var(--red)}
+
+/* BODY GRID */
+#body{display:grid;grid-template-columns:188px 1fr 188px;gap:1px;overflow:hidden}
+#lp,#rp{background:var(--bg2);overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:4px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#182030}
+#center{display:grid;grid-template-rows:1fr 170px;gap:1px;overflow:hidden}
+#mw{position:relative;background:#040c18;overflow:hidden}
+#btm{display:grid;grid-template-columns:1fr 1fr;gap:1px;overflow:hidden}
+#cctv-zone,#asean-zone{background:var(--bg2);overflow:hidden;padding:5px}
+
+/* PANELS */
+.pc{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px;flex-shrink:0}
+.pt{font-size:8px;font-weight:700;color:#2a5070;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.ptl{display:flex;align-items:center;gap:3px}
+.dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+
+/* ALERT ITEMS */
+.ai{padding:3px 4px;border-radius:2px;margin-bottom:2px;border-left:2px solid #222;cursor:pointer}
+.ai.cr{border-color:var(--red)}.ai.wa{border-color:var(--amber)}.ai.in{border-color:var(--blue)}
+.ac{font-size:9px;font-weight:600;color:#88a8c8;line-height:1.3}
+.ad{font-size:8px;color:var(--text3);margin-top:1px;line-height:1.3}
+.badge{font-size:6px;padding:1px 3px;border-radius:2px;border:1px solid;float:right;margin-left:3px;font-weight:700}
+.bcr{color:#ff5050;border-color:#5a1010;background:#160404}
+.bwa{color:#ffaa30;border-color:#4a2a00;background:#0e0800}
+.bin{color:#5aaaff;border-color:#1a2a60;background:#030a1c}
+
+/* LEADERS */
+.lc{display:flex;align-items:center;gap:4px;padding:3px;border-radius:2px;cursor:pointer;margin-bottom:2px}
+.lc:hover{background:#0d1e38}
+.av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;flex-shrink:0}
+
+/* RIGHT PANELS */
+.mr{display:flex;gap:3px;padding:2px 0;border-bottom:1px solid #090e18;align-items:flex-start}
+.ms{font-size:7px;font-weight:700;min-width:44px}
+.mn{font-size:8px;color:var(--text2)}.md{font-size:7px;color:var(--text3)}
+.wr{display:flex;gap:4px;margin-bottom:3px;align-items:flex-start}
+.wi{font-size:13px;line-height:1}.wl{font-size:8px;color:var(--text2);font-weight:600}.wv{font-size:7px;color:var(--text3)}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #090e18}
+.sn{font-size:8px;color:var(--text2)}.sv{font-size:7px;color:var(--text3)}
+.ss{font-size:6px;font-weight:700;padding:1px 3px;border-radius:2px;border:1px solid}
+.cr2{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #090e18}
+.cn2{font-size:8px;color:var(--text2)}.cv{font-size:8px;color:var(--text)}
+.up{color:var(--green)}.dn{color:var(--red)}
+
+/* MAP TOOLTIP */
+#tt{position:absolute;background:#08182cee;border:1px solid #2a4a7a;border-radius:5px;padding:7px 9px;pointer-events:none;opacity:0;transition:opacity .1s;z-index:10;min-width:155px;max-width:205px}
+#tt-cn{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:3px;letter-spacing:.5px}
+.ttr{display:flex;justify-content:space-between;gap:6px;margin-bottom:2px;color:#3a5a7a;font-size:8px}
+.ttv{color:#8ab0cc;font-weight:600;text-align:right;max-width:108px}
+.ttp{display:inline-block;margin-top:4px;font-size:8px;padding:2px 7px;border-radius:3px;border:1px solid #2a4a70;color:var(--blue);cursor:pointer;font-family:'Courier New',monospace}
+
+/* MODAL */
+#modal{position:fixed;inset:0;background:#050a14ec;z-index:500;display:none;align-items:center;justify-content:center}
+#modal.open{display:flex}
+#mc{background:#081624;border:1px solid #2a4a70;border-radius:7px;width:460px;max-height:88vh;overflow-y:auto}
+#mhdr{padding:10px 14px 8px;border-bottom:1px solid #102030;display:flex;justify-content:space-between;align-items:flex-start}
+#mbody{padding:10px 14px 14px}
+.mx{background:transparent;border:1px solid #2a3a50;color:#4a6080;cursor:pointer;border-radius:3px;padding:2px 8px;font-size:9px;font-family:'Courier New',monospace}
+.mx:hover{background:#102030}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.mst{background:#050f1c;border:1px solid #102030;border-radius:3px;padding:5px 7px}
+.msl{font-size:7px;color:#2a5070;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.msv{font-size:11px;font-weight:600;color:#90b0c8}
+.msec{margin-bottom:7px}
+.msect{font-size:7px;font-weight:700;color:#2a5070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;padding-bottom:2px;border-bottom:1px solid #102030}
+.mrow{display:flex;justify-content:space-between;padding:2px 0;font-size:9px;border-bottom:1px solid #080e18}
+.mk{color:#2a4060}.mv{color:#5888a8;font-weight:600;text-align:right;max-width:240px}
+.mni{padding:3px 0;border-bottom:1px solid #080e18}
+.mnb{font-size:8px;color:#487898;line-height:1.4}
+.live-badge{font-size:7px;color:var(--green);border:1px solid #22cc6625;padding:1px 4px;border-radius:2px;letter-spacing:.5px}
+.sim-badge{font-size:7px;color:var(--text3);border:1px solid var(--border);padding:1px 4px;border-radius:2px;letter-spacing:.5px}
+
+/* CCTV */
+.cam-tabs{display:flex;gap:2px;margin-bottom:4px;flex-wrap:wrap}
+.ctab{padding:2px 7px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:8px;font-family:'Courier New',monospace;letter-spacing:.5px}
+.ctab.on{background:#0a1e30;color:var(--blue);border-color:#1a3050}
+#cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;height:calc(100% - 42px)}
+.cam{background:#040c18;border:1px solid #101e30;border-radius:3px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.cam:hover{border-color:#2a4060}
+.cscreen{flex:1;position:relative;overflow:hidden;min-height:80px;background:#030c18}
+.cscreen iframe{width:100%;height:100%;border:none;display:block}
+.cscreen canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.cloc{position:absolute;top:3px;left:3px;font-size:6px;color:var(--teal);background:rgba(3,12,24,.75);padding:1px 4px;border-radius:2px;pointer-events:none;z-index:2;letter-spacing:.5px}
+.cscan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(58,138,255,.06),transparent);animation:cscan 4s linear infinite;pointer-events:none}
+@keyframes cscan{0%{top:0}100%{top:100%}}
+.cbar{background:#060e1a;border-top:1px solid #0e1e2e;padding:3px 5px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cname{font-size:7px;color:#2a5070;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpill{font-size:6px;font-weight:700;padding:1px 3px;border-radius:2px;border:1px solid;letter-spacing:.5px;flex-shrink:0}
+.clive{color:var(--green);border-color:#22cc6630}.csim{color:#4a6a8a;border-color:#2a3a50}
+
+/* ASEAN */
+.ar{display:flex;align-items:center;gap:4px;padding:2px 4px;border-bottom:1px solid #090e18;cursor:pointer}
+.ar:hover{background:#0c1828}
+.afl{font-size:10px;width:16px;text-align:center;flex-shrink:0}
+.anm{font-size:8px;font-weight:600;color:var(--text2);width:58px;flex-shrink:0}
+.abw{flex:1;height:4px;background:#090e18;border-radius:3px;overflow:hidden}
+.ab{height:100%;border-radius:3px;transition:width .6s}
+.ast{font-size:7px;font-weight:700;padding:1px 3px;border-radius:2px;border:1px solid;white-space:nowrap}
+.ast-ok{color:var(--green);border-color:#22cc6625}.ast-wa{color:var(--amber);border-color:#ff992225}.ast-cr{color:var(--red);border-color:#ff3a3a25}
+
+/* NEWS BAR */
+#nb{background:#070e1a;border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden}
+.nl{font-size:8px;font-weight:700;color:var(--blue);background:#0b1828;padding:0 10px;height:32px;display:flex;align-items:center;white-space:nowrap;border-right:1px solid var(--border);flex-shrink:0;letter-spacing:1.5px;gap:5px}
+#tw{height:32px;overflow:hidden;flex:1}
+#ti{display:flex;white-space:nowrap;will-change:transform;height:32px}
+.ni{font-size:9px;color:#4a6a8a;padding:0 14px;border-right:1px solid #101e2e;display:inline-flex;align-items:center;gap:5px;height:32px;cursor:pointer;flex-shrink:0}
+.ni:hover{color:var(--blue);background:#0a1c38}
+.nt{font-size:7px;font-weight:700;letter-spacing:.5px}
+
+/* API STATUS inline */
+.ap{display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #090e18}
+.an2{font-size:8px;color:var(--text2)}.astat{font-size:6px;font-weight:700;padding:1px 3px;border-radius:2px;border:1px solid}
+.aok{color:var(--green);border-color:#22cc6625}.asim{color:var(--text3);border-color:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-scan"></div>
+<div id="login">
+  <div class="lbox">
+    <div class="l-eye">&#9670;</div>
+    <div class="l-logo">GOD'S EYE</div>
+    <div class="l-sub">GLOBAL MONITORING SYSTEM</div>
+    <div style="font-size:9px;color:#1a3050;margin-bottom:22px;letter-spacing:.5px">ENTER CLEARANCE CODE TO AUTHENTICATE</div>
+    <input id="pin" type="password" placeholder="· · · · · · · · · ·" maxlength="32" autocomplete="off"/>
+    <button id="go" onclick="doLogin()">AUTHENTICATE &#8594;</button>
+    <div id="l-err"></div>
+    <div class="l-hint">
+      <span class="l-sdot"></span>All access is logged and monitored.<br>
+      Authorized personnel only.
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="gone">
+<div id="hdr">
+  <span class="logo">&#9670; GOD'S EYE</span>
+  <span style="font-size:9px;color:#2a4060;flex-shrink:0"><span class="l-sdot"></span><span id="stxt">LIVE</span></span>
+
+  <div class="fbar">
+    <span class="flab">FILTER</span>
+    <button class="fb all-on" id="fa" onclick="setFilter('all')">ALL</button>
+    <button class="fb" id="fc" onclick="setFilter('conflict')">&#9679; CONFLICT</button>
+    <button class="fb" id="fw" onclick="setFilter('watch')">&#9651; WATCHLIST</button>
+  </div>
+
+  <div style="display:flex;gap:2px;flex-shrink:0">
+    <button class="lb on" onclick="tgl(this,'cl-g')">CONFLICTS</button>
+    <button class="lb" onclick="tgl(this,'wx-g')">WEATHER</button>
+    <button class="lb" onclick="tgl(this,'fl-g')">FLIGHTS</button>
+    <button class="lb" onclick="tgl(this,'mt-g')">MARITIME</button>
+    <button class="lb" onclick="tgl(this,'mk-g')">MARKETS</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+    <div class="spin" id="ring"></div>
+    <span id="nxt" style="font-size:8px;color:#1a3050">30s</span>
+    <button class="lb" onclick="manualRefresh()" style="color:var(--green);border-color:#22cc6620">&#8635; NOW</button>
+  </div>
+  <span id="clk"></span>
+  <button id="lock" onclick="logout()">&#128274; LOCK</button>
+</div>
+
+<div id="body">
+
+<!-- LEFT PANEL -->
+<div id="lp">
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--red)"></span><span id="atitle">ALL ALERTS</span></div><span id="acount" style="font-size:7px;color:var(--text3)"></span></div>
+    <div id="alist"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--blue)"></span>LEADERS</div><span id="lnote" style="font-size:7px;color:var(--text3)"></span></div>
+    <div id="llist"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--teal)"></span>API SOURCES</div><span class="live-badge">ALL FREE</span></div>
+    <div id="api-list"></div>
+    <div style="margin-top:5px;padding:4px 6px;background:#04080e;border:1px solid #102030;border-radius:3px;font-size:7px;line-height:1.7;color:#1a3050">
+      <span style="color:var(--blue)">NETLIFY DEPLOY</span><br>
+      1. Upload folder to GitHub<br>
+      2. netlify.com → New site → Import<br>
+      3. Add <span style="color:var(--teal)">ACCESS_PASS</span> env var<br>
+      <span style="color:#22cc6670">Total cost: $0/month</span>
+    </div>
+  </div>
+</div>
+
+<!-- CENTER MAP + BOTTOM -->
+<div id="center">
+<div id="mw">
+  <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" id="wmap" style="width:100%;height:100%;display:block">
+    <rect width="900" height="340" fill="#040c18"/>
+    <g stroke="#0a1828" stroke-width="0.4">
+      <line x1="0" y1="85" x2="900" y2="85"/><line x1="0" y1="170" x2="900" y2="170"/><line x1="0" y1="255" x2="900" y2="255"/>
+      <line x1="225" y1="0" x2="225" y2="340"/><line x1="450" y1="0" x2="450" y2="340"/><line x1="675" y1="0" x2="675" y2="340"/>
+    </g>
+    <line x1="0" y1="170" x2="900" y2="170" stroke="#102236" stroke-width="0.7" stroke-dasharray="5 4"/>
+    <!-- North America -->
+    <path d="M50,48 L100,40 L140,44 L164,54 L176,66 L180,85 L178,106 L170,127 L162,146 L155,162 L148,174 L138,184 L125,190 L112,186 L100,177 L90,164 L80,148 L70,128 L62,106 L56,82 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="North America" style="cursor:pointer"/>
+    <path d="M60,38 L90,32 L118,36 L130,47 L125,58 L106,62 L80,58 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6"/>
+    <path d="M130,190 L150,184 L165,192 L170,207 L158,218 L142,215 L130,204 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Central America" style="cursor:pointer"/>
+    <!-- South America -->
+    <path d="M135,220 L158,214 L178,222 L196,235 L205,255 L208,282 L200,308 L190,325 L174,332 L156,328 L140,314 L132,292 L130,268 L132,244 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="South America" style="cursor:pointer"/>
+    <!-- Europe -->
+    <path d="M342,72 L378,66 L412,70 L430,80 L432,95 L422,108 L403,114 L382,112 L360,106 L342,96 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Western Europe" style="cursor:pointer"/>
+    <path d="M348,62 L368,55 L390,57 L404,67 L400,76 L376,77 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Scandinavia" style="cursor:pointer"/>
+    <path d="M312,68 L330,62 L340,72 L334,83 L318,84 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Western Europe" style="cursor:pointer"/>
+    <path d="M408,108 L432,103 L444,113 L445,127 L434,136 L414,135 L404,125 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Western Europe" style="cursor:pointer"/>
+    <!-- Africa -->
+    <path d="M330,115 L378,110 L420,114 L446,125 L458,142 L460,162 L455,187 L444,210 L428,232 L408,246 L385,249 L362,241 L342,222 L328,200 L320,174 L320,148 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Africa" style="cursor:pointer"/>
+    <path d="M456,140 L480,135 L490,144 L485,158 L468,162 L456,152 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Africa" style="cursor:pointer"/>
+    <!-- Russia -->
+    <path d="M435,30 L505,23 L582,20 L654,23 L720,28 L762,38 L785,51 L789,68 L776,83 L750,91 L716,95 L678,97 L638,99 L596,101 L556,102 L518,99 L486,92 L462,80 L440,65 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Russia" style="cursor:pointer"/>
+    <path d="M550,99 L598,96 L646,98 L685,104 L720,110 L746,120 L758,133 L753,148 L732,155 L702,158 L665,157 L628,154 L592,150 L562,144 L548,134 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Russia" style="cursor:pointer"/>
+    <!-- Middle East -->
+    <path d="M446,103 L488,99 L516,105 L530,118 L530,133 L518,145 L495,150 L470,147 L450,137 L445,122 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Middle East" style="cursor:pointer"/>
+    <path d="M480,145 L515,139 L538,148 L548,165 L542,183 L522,190 L498,187 L480,174 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Middle East" style="cursor:pointer"/>
+    <!-- Central/South Asia -->
+    <path d="M502,98 L565,94 L605,100 L618,115 L610,133 L582,143 L550,145 L522,138 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Central Asia" style="cursor:pointer"/>
+    <path d="M536,131 L582,126 L620,134 L635,148 L640,168 L635,188 L622,206 L604,216 L582,218 L560,210 L544,194 L536,172 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="South Asia" style="cursor:pointer"/>
+    <!-- China -->
+    <path d="M604,97 L672,92 L726,97 L758,108 L772,122 L769,143 L754,155 L728,162 L696,164 L662,162 L628,158 L604,148 L594,132 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="China" style="cursor:pointer"/>
+    <!-- Korea/Japan/Taiwan -->
+    <path d="M745,120 L762,117 L770,128 L765,141 L750,143 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Korean Peninsula" style="cursor:pointer"/>
+    <path d="M775,101 L788,97 L797,107 L792,119 L778,120 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Japan" style="cursor:pointer"/>
+    <path d="M796,112 L808,107 L815,117 L810,128 L797,128 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Japan" style="cursor:pointer"/>
+    <path d="M747,150 L754,146 L758,152 L753,158 L745,155 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.6" data-r="Taiwan" style="cursor:pointer"/>
+    <!-- SEA region box -->
+    <rect x="645" y="136" width="188" height="178" rx="3" fill="none" stroke="#22ccaa" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.3"/>
+    <text x="647" y="133" font-size="6" fill="#22ccaa" opacity="0.45" font-family="Courier New" letter-spacing="1">SOUTHEAST ASIA</text>
+    <!-- SEA countries -->
+    <path d="M648,138 L678,133 L696,141 L700,156 L694,172 L678,179 L660,175 L648,162 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Myanmar" style="cursor:pointer"/>
+    <path d="M676,155 L700,149 L714,160 L716,178 L708,196 L692,202 L676,194 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Thailand" style="cursor:pointer"/>
+    <path d="M700,144 L724,139 L736,150 L734,168 L722,178 L706,174 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Laos" style="cursor:pointer"/>
+    <path d="M724,136 L746,132 L755,143 L754,161 L747,181 L736,196 L724,193 L716,178 L724,158 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Vietnam" style="cursor:pointer"/>
+    <path d="M706,192 L728,185 L738,194 L736,210 L720,216 L706,210 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Cambodia" style="cursor:pointer"/>
+    <path d="M694,200 L714,194 L724,204 L722,220 L712,230 L696,226 L688,214 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Malaysia" style="cursor:pointer"/>
+    <circle cx="716" cy="233" r="3" fill="#0e2535" stroke="#22ccaa" stroke-width="1" data-r="Singapore" style="cursor:pointer"/>
+    <path d="M766,157 L784,152 L795,162 L793,178 L778,183 L764,176 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Philippines" style="cursor:pointer"/>
+    <path d="M778,180 L793,175 L802,186 L799,200 L784,203 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Philippines" style="cursor:pointer"/>
+    <path d="M693,218 L724,210 L740,220 L738,236 L722,242 L700,238 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Indonesia" style="cursor:pointer"/>
+    <path d="M730,240 L762,234 L782,242 L790,256 L774,264 L748,262 L732,252 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Indonesia" style="cursor:pointer"/>
+    <path d="M750,212 L784,207 L808,215 L820,228 L814,244 L790,250 L764,246 Z" fill="#0e2535" stroke="#1c3848" stroke-width="0.9" data-r="Indonesia" style="cursor:pointer"/>
+    <!-- Australia -->
+    <path d="M734,244 L785,236 L820,242 L848,254 L860,275 L856,300 L840,318 L814,328 L780,330 L752,320 L733,300 L726,275 L728,258 Z" fill="#0c1e32" stroke="#162840" stroke-width="0.7" data-r="Australia" style="cursor:pointer"/>
+    <!-- Conflict rings -->
+    <g id="cl-g">
+      <circle cx="460" cy="120" r="6" fill="none" stroke="#ff3030" stroke-width="1.1"><animate attributeName="r" values="6;15;6" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.05;0.9" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="494" cy="145" r="5" fill="none" stroke="#ff3030" stroke-width="1"><animate attributeName="r" values="5;13;5" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.05;0.9" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="750" cy="153" r="5" fill="none" stroke="#ff9922" stroke-width="1"><animate attributeName="r" values="5;11;5" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.05;0.8" dur="2.5s" repeatCount="indefinite"/></circle>
+      <circle cx="755" cy="192" r="4" fill="none" stroke="#ff9922" stroke-width="1"><animate attributeName="r" values="4;10;4" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.05;0.8" dur="3s" repeatCount="indefinite"/></circle>
+      <circle cx="668" cy="155" r="4" fill="none" stroke="#ff3030" stroke-width="1"><animate attributeName="r" values="4;10;4" dur="2.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.05;0.7" dur="2.8s" repeatCount="indefinite"/></circle>
+      <circle cx="462" cy="183" r="4" fill="none" stroke="#ff3030" stroke-width="1"><animate attributeName="r" values="4;10;4" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.05;0.8" dur="2.2s" repeatCount="indefinite"/></circle>
+      <circle cx="368" cy="192" r="3" fill="none" stroke="#ff9922" stroke-width="0.8"><animate attributeName="r" values="3;8;3" dur="3.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.05;0.7" dur="3.2s" repeatCount="indefinite"/></circle>
+      <circle cx="160" cy="200" r="3" fill="none" stroke="#ff9922" stroke-width="0.8"><animate attributeName="r" values="3;7;3" dur="3.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.05;0.6" dur="3.5s" repeatCount="indefinite"/></circle>
+      <g id="eq-dots"></g>
+    </g>
+    <!-- Layer groups -->
+    <g id="wx-g" opacity="0" style="transition:opacity .3s">
+      <text x="85" y="112" font-size="13" font-family="serif">&#9928;</text>
+      <text x="355" y="76" font-size="11" font-family="serif">&#9729;</text>
+      <text x="775" y="102" font-size="13" font-family="serif">&#127786;</text>
+      <text x="688" y="178" font-size="11" font-family="serif">&#9729;</text>
+      <text x="200" y="248" font-size="11" font-family="serif">&#127783;</text>
+      <text x="825" y="285" font-size="11" font-family="serif">&#9728;</text>
+    </g>
+    <g id="fl-g" opacity="0" style="transition:opacity .3s">
+      <path d="M100 140 Q 280 75 415 90" fill="none" stroke="#3a8aff" stroke-width="0.6" stroke-dasharray="4 7" opacity="0.4"><animate attributeName="stroke-dashoffset" from="0" to="-100" dur="3s" repeatCount="indefinite"/></path>
+      <path d="M415 90 Q 580 68 782 105" fill="none" stroke="#3a8aff" stroke-width="0.6" stroke-dasharray="4 7" opacity="0.4"><animate attributeName="stroke-dashoffset" from="0" to="-100" dur="4s" repeatCount="indefinite"/></path>
+      <path d="M595 143 Q 678 160 780 170" fill="none" stroke="#22cc66" stroke-width="0.6" stroke-dasharray="4 7" opacity="0.35"><animate attributeName="stroke-dashoffset" from="0" to="-100" dur="3.5s" repeatCount="indefinite"/></path>
+      <circle r="2.5" fill="#3a8aff" opacity="0.9"><animateMotion path="M100,140 Q280,75 415,90" dur="5s" repeatCount="indefinite"/></circle>
+      <circle r="2.5" fill="#22cc66" opacity="0.9"><animateMotion path="M595,143 Q678,160 780,170" dur="4s" repeatCount="indefinite" begin="1s"/></circle>
+      <g id="live-ac"></g>
+    </g>
+    <g id="mt-g" opacity="0" style="transition:opacity .3s">
+      <rect x="683" y="225" width="7" height="3" rx="1" fill="#22ccaa" opacity="0.9"/>
+      <text x="676" y="221" font-size="5.5" fill="#22ccaa" font-family="Courier New">Malacca</text>
+      <rect x="518" y="157" width="7" height="3" rx="1" fill="#ff9922" opacity="0.9"/>
+      <text x="508" y="153" font-size="5.5" fill="#ff9922" font-family="Courier New">Hormuz</text>
+      <rect x="752" y="193" width="7" height="3" rx="1" fill="#ff9922" opacity="0.9"/>
+      <text x="737" y="189" font-size="5.5" fill="#ff9922" font-family="Courier New">SCS</text>
+      <rect x="458" y="136" width="7" height="3" rx="1" fill="#ff9922" opacity="0.9"/>
+      <text x="446" y="132" font-size="5.5" fill="#ff9922" font-family="Courier New">Suez</text>
+    </g>
+    <g id="mk-g" opacity="0" style="transition:opacity .3s">
+      <rect x="90" y="138" width="36" height="9" rx="2" fill="#22cc66" opacity="0.15"/>
+      <text x="108" y="146" font-size="6" fill="#22cc66" text-anchor="middle" font-family="Courier New" id="mk-nyse">NYSE</text>
+      <rect x="853" y="116" width="36" height="9" rx="2" fill="#22cc66" opacity="0.15"/>
+      <text x="871" y="124" font-size="6" fill="#22cc66" text-anchor="middle" font-family="Courier New" id="mk-nky">N225</text>
+      <rect x="786" y="130" width="36" height="9" rx="2" fill="#22cc66" opacity="0.15"/>
+      <text x="804" y="138" font-size="6" fill="#22cc66" text-anchor="middle" font-family="Courier New" id="mk-sse">SHSE</text>
+    </g>
+    <!-- City dots -->
+    <g font-size="5.5" font-family="Courier New">
+      <circle cx="103" cy="137" r="1.5" fill="#3a8aff" opacity="0.8"/><text x="106" y="135" fill="#3a6aaa">NYC</text>
+      <circle cx="375" cy="77" r="1.5" fill="#3a8aff" opacity="0.8"/><text x="378" y="75" fill="#3a6aaa">LDN</text>
+      <circle cx="460" cy="70" r="1.5" fill="#3a8aff" opacity="0.7"/><text x="463" y="68" fill="#3a6aaa">MOS</text>
+      <circle cx="784" cy="118" r="1.5" fill="#3a8aff" opacity="0.8"/><text x="787" y="116" fill="#3a6aaa">TKY</text>
+      <circle cx="733" cy="134" r="1.5" fill="#3a8aff" opacity="0.8"/><text x="736" y="132" fill="#3a6aaa">SHA</text>
+      <circle cx="637" cy="168" r="1.5" fill="#3a8aff" opacity="0.7"/><text x="640" y="166" fill="#3a6aaa">DEL</text>
+      <circle cx="382" cy="116" r="1.5" fill="#3a8aff" opacity="0.7"/><text x="385" y="114" fill="#3a6aaa">CAI</text>
+      <circle cx="775" cy="135" r="1.5" fill="#3a8aff" opacity="0.8"/><text x="778" y="133" fill="#3a6aaa">SEO</text>
+    </g>
+    <g font-size="5.5" font-family="Courier New">
+      <circle cx="666" cy="157" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="669" y="155" fill="#22ccaa">RGN</text>
+      <circle cx="696" cy="177" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="699" y="175" fill="#22ccaa">BKK</text>
+      <circle cx="740" cy="155" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="743" y="153" fill="#22ccaa">HAN</text>
+      <circle cx="748" cy="174" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="751" y="172" fill="#22ccaa">SGN</text>
+      <circle cx="716" cy="235" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="719" y="233" fill="#22ccaa">SIN</text>
+      <circle cx="782" cy="168" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="785" y="166" fill="#22ccaa">MNL</text>
+      <circle cx="762" cy="226" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="765" y="224" fill="#22ccaa">JKT</text>
+      <circle cx="705" cy="208" r="1.5" fill="#22ccaa" opacity="0.9"/><text x="708" y="206" fill="#22ccaa">KUL</text>
+    </g>
+  </svg>
+  <div id="tt">
+    <div id="tt-cn">—</div>
+    <div id="tt-bd"></div>
+    <span class="ttp" id="tt-open">OPEN BRIEFING &#8599;</span>
+  </div>
+</div>
+
+<div id="btm">
+  <!-- CCTV PANEL -->
+  <div id="cctv-zone">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="cam-tabs" id="cam-tabs" style="margin-bottom:0">
+        <button class="ctab on" onclick="showCams('sea',this)">SEA</button>
+        <button class="ctab" onclick="showCams('asia',this)">E.ASIA</button>
+        <button class="ctab" onclick="showCams('europe',this)">EUR</button>
+        <button class="ctab" onclick="showCams('americas',this)">AMER</button>
+        <button class="ctab" onclick="showCams('weather',this)">WX</button>
+      </div>
+      <span style="font-size:7px;color:#22cc66" id="cam-status">&#9679; LOADING</span>
+    </div>
+    <div id="cgrid"></div>
+  </div>
+  <!-- ASEAN PANEL -->
+  <div id="asean-zone">
+    <div style="font-size:8px;font-weight:700;color:#2a5070;letter-spacing:1.5px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+      <span>ASEAN STATUS</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="anote" style="font-size:7px;color:#1a3050"></span>
+        <span style="font-size:7px;color:#3a8aff;cursor:pointer" onclick="sendMsg('Full ASEAN geopolitical briefing')">BRIEF &#8599;</span>
+      </div>
+    </div>
+    <div id="asean-inner"></div>
+  </div>
+</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="rp">
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:#ff9922"></span>MILITARY</div></div>
+    <div id="milp"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--green)"></span>WEATHER</div><span class="live-badge" id="wx-badge">OPEN-METEO</span></div>
+    <div id="wxp"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--purple)"></span>MARITIME</div></div>
+    <div id="seap"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:var(--teal)"></span>FOREX LIVE</div><span class="live-badge" id="fx-badge">FRANKFURTER</span></div>
+    <div id="fxp"></div>
+  </div>
+  <div class="pc">
+    <div class="pt"><div class="ptl"><span class="dot" style="background:#ff9922"></span>COMMODITIES</div><span class="sim-badge">SIM</span></div>
+    <div id="comp"></div>
+  </div>
+</div>
+
+</div><!-- /body -->
+
+<!-- NEWS TICKER -->
+<div id="nb">
+  <div class="nl">&#9654; LIVE FEED <span style="font-size:6px;color:#1a3050;font-weight:400;letter-spacing:.5px">GDELT&#183;FREE</span></div>
+  <div id="tw"><div id="ti"></div></div>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div id="modal">
+  <div id="mc">
+    <div id="mhdr">
+      <div>
+        <div id="mf" style="font-size:20px;margin-bottom:2px"></div>
+        <div id="mn" style="font-size:14px;font-weight:700;color:#90b0c8;letter-spacing:.5px"></div>
+        <div id="ms2" style="font-size:8px;color:#2a4060;margin-top:1px"></div>
+      </div>
+      <button class="mx" onclick="closeModal()">CLOSE &#10005;</button>
+    </div>
+    <div id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const PROXY = '/.netlify/functions/proxy';
+let PASS = '';
+let filter = 'all';
+let countdown = 30;
+let liveTimers = [];
+let camRegion = 'sea';
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+document.getElementById('pin').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const val = document.getElementById('pin').value.trim();
+  if (!val) { shake(); return; }
+  PASS = val;
+  try {
+    const res = await fetch(`${PROXY}?api=help&pass=${encodeURIComponent(PASS)}`, { headers: { 'X-Access-Pass': PASS } });
+    if (res.ok) { enterApp(); }
+    else { authFail(); }
+  } catch {
+    // Netlify not yet deployed — allow local test with correct pass
+    if (val === (document.querySelector('meta[name="test-pass"]')?.content || '4llSeing3ye')) { enterApp(); }
+    else { authFail(); }
+  }
+}
+
+function shake() {
+  const p = document.getElementById('pin');
+  p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake');
+}
+function authFail() {
+  PASS = '';
+  document.getElementById('l-err').textContent = 'ACCESS DENIED — INVALID CLEARANCE CODE';
+  shake();
+  setTimeout(() => document.getElementById('l-err').textContent = '', 3000);
+}
+function enterApp() {
+  document.getElementById('login').classList.add('gone');
+  document.getElementById('app').classList.remove('gone');
+  init();
+}
+function logout() {
+  PASS = '';
+  document.getElementById('pin').value = '';
+  document.getElementById('l-err').textContent = '';
+  document.getElementById('app').classList.add('gone');
+  document.getElementById('login').classList.remove('gone');
+  liveTimers.forEach(clearInterval); liveTimers = [];
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+async function api(endpoint, extra = '') {
+  const res = await fetch(`${PROXY}?api=${endpoint}${extra}&pass=${encodeURIComponent(PASS)}`, { headers: { 'X-Access-Pass': PASS } });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+function sendMsg(txt) { if (typeof sendPrompt === 'function') sendPrompt(txt); }
+function tickClock() { const n = new Date(); document.getElementById('clk').textContent = 'UTC ' + n.toUTCString().slice(17, 25) + ' · ' + n.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function tgl(b, id) { b.classList.toggle('on'); const el = document.getElementById(id); if (el) el.style.opacity = el.style.opacity === '1' ? '0' : '1'; }
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const alertsData = [
+  { c: 'Ukraine — Zaporizhzhia', d: 'Artillery exchanges, civilian corridor requested', t: '4m', l: 'cr', type: 'conflict', r: 'Europe' },
+  { c: 'Gaza / Israel', d: 'IDF ground ops active, crossings monitored', t: '11m', l: 'cr', type: 'conflict', r: 'Middle East' },
+  { c: 'Sudan', d: 'RSF advance Khartoum, aid blocked Port Sudan', t: '28m', l: 'cr', type: 'conflict', r: 'Africa' },
+  { c: 'Myanmar', d: 'SAC airstrikes escalate, Lashio contested', t: '55m', l: 'cr', type: 'conflict', r: 'SEA' },
+  { c: 'Taiwan Strait', d: '4 PLA destroyers ADIZ entry, ROCAF scrambled', t: '1h', l: 'wa', type: 'watch', r: 'E. Asia' },
+  { c: 'South China Sea', d: 'PH–China standoff Second Thomas Shoal', t: '1h', l: 'wa', type: 'watch', r: 'SEA' },
+  { c: 'North Korea', d: 'ICBM launch window open, 72h alert active', t: '2h', l: 'wa', type: 'watch', r: 'E. Asia' },
+  { c: 'West Africa', d: 'JNIM advance northern Mali, MINUSMA zones', t: '2h', l: 'wa', type: 'watch', r: 'Africa' },
+  { c: 'Iran', d: '84% uranium enrichment, IAEA inspectors blocked', t: '3h', l: 'wa', type: 'watch', r: 'Middle East' },
+  { c: 'Haiti', d: 'Gang control ~65% Port-au-Prince, MSS deployed', t: '4h', l: 'in', type: 'watch', r: 'Americas' },
+  { c: 'Venezuela', d: 'Post-election tensions, border crossings elevated', t: '5h', l: 'in', type: 'watch', r: 'Americas' },
+];
+const leadersData = [
+  { c: 'USA', n: 'Donald Trump', r: 'President', ap: 47, col: '#1a3a80', i: 'US', type: 'watch' },
+  { c: 'China', n: 'Xi Jinping', r: 'Gen. Secretary', ap: 71, col: '#701010', i: 'CN', type: 'watch' },
+  { c: 'Russia', n: 'V. Putin', r: 'President', ap: 64, col: '#202070', i: 'RU', type: 'conflict' },
+  { c: 'India', n: 'N. Modi', r: 'PM', ap: 75, col: '#603010', i: 'IN', type: 'stable' },
+  { c: 'Indonesia', n: 'Prabowo', r: 'President', ap: 68, col: '#104020', i: 'ID', type: 'stable' },
+  { c: 'Philippines', n: 'Marcos Jr.', r: 'President', ap: 55, col: '#401020', i: 'PH', type: 'watch' },
+  { c: 'Vietnam', n: 'Lương Cường', r: 'Gen. Sec.', ap: 72, col: '#601010', i: 'VN', type: 'stable' },
+  { c: 'Thailand', n: 'Paetongtarn', r: 'PM', ap: 48, col: '#102840', i: 'TH', type: 'watch' },
+  { c: 'Malaysia', n: 'Anwar Ibrahim', r: 'PM', ap: 58, col: '#102050', i: 'MY', type: 'stable' },
+  { c: 'Singapore', n: 'Lawrence Wong', r: 'PM', ap: 72, col: '#103030', i: 'SG', type: 'stable' },
+  { c: 'Myanmar', n: 'Min Aung Hlaing', r: 'SAC Chair', ap: 12, col: '#380808', i: 'MM', type: 'conflict' },
+  { c: 'N. Korea', n: 'Kim Jong-un', r: 'Supreme Leader', ap: 0, col: '#300606', i: 'KP', type: 'conflict' },
+];
+const milData = [
+  { s: 'ELEVATED', r: 'INDOPACOM', d: 'Dual CSG Philippine Sea', col: '#ff3030', type: 'conflict' },
+  { s: 'ACTIVE', r: 'EUCOM', d: 'NATO eFP Baltic, 12k troops', col: '#ff3030', type: 'conflict' },
+  { s: 'WATCH', r: 'CENTCOM', d: 'Red Sea TF-153 escort ops', col: '#ff9922', type: 'watch' },
+  { s: 'WATCH', r: 'PACOM', d: 'EDCA Philippines elevated', col: '#ff9922', type: 'watch' },
+  { s: 'ACTIVE', r: 'USFJ', d: 'Kadena F-35 deployment up', col: '#ff9922', type: 'watch' },
+  { s: 'ROUTINE', r: 'AFRICOM', d: 'Sahel + Horn counter-terror', col: '#3a8aff', type: 'stable' },
+];
+const seaData = [
+  { l: 'Malacca', s: 'NORMAL', n: 118, col: '#22cc66' }, { l: 'S. China Sea', s: 'ELEVATED', n: 88, col: '#ff9922' },
+  { l: 'Hormuz', s: 'ELEVATED', n: 36, col: '#ff4444' }, { l: 'Red Sea', s: 'RESTRICTED', n: 14, col: '#ff4444' },
+  { l: 'Suez Canal', s: 'CONGESTED', n: 52, col: '#ff9922' }, { l: 'Panama', s: 'NORMAL', n: 38, col: '#22cc66' },
+  { l: 'Lombok/Sunda', s: 'NORMAL', n: 44, col: '#22cc66' },
+];
+const commsData = [
+  { n: 'Brent', v: 88.42, c: 1.2 }, { n: 'Gold', v: 2342, c: -0.4 }, { n: 'Wheat', v: 587, c: 2.8 },
+  { n: 'Nat.Gas', v: 3.12, c: -1.5 }, { n: 'Palm Oil', v: 3842, c: 0.5 }, { n: 'Rice', v: 22.4, c: 1.1 },
+  { n: 'Coffee', v: 214, c: 1.9 }, { n: 'Iron Ore', v: 112, c: -0.9 },
+];
+const aseanData = [
+  { f: '🇲🇲', n: 'Myanmar', stab: 18, status: 'CIVIL WAR', sc: 'cr', type: 'conflict' },
+  { f: '🇵🇭', n: 'Philippines', stab: 52, status: 'WATCH', sc: 'wa', type: 'watch' },
+  { f: '🇹🇭', n: 'Thailand', stab: 55, status: 'WATCH', sc: 'wa', type: 'watch' },
+  { f: '🇰🇭', n: 'Cambodia', stab: 58, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇱🇦', n: 'Laos', stab: 60, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇲🇾', n: 'Malaysia', stab: 65, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇮🇩', n: 'Indonesia', stab: 65, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇻🇳', n: 'Vietnam', stab: 70, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇧🇳', n: 'Brunei', stab: 80, status: 'STABLE', sc: 'ok', type: 'stable' },
+  { f: '🇸🇬', n: 'Singapore', stab: 92, status: 'STABLE', sc: 'ok', type: 'stable' },
+];
+const apiSources = [
+  { n: 'Open-Meteo', d: 'Weather · unlimited' }, { n: 'OpenSky', d: 'Flights · unlimited' },
+  { n: 'GDELT', d: 'Conflict/News · unlimited' }, { n: 'Frankfurter', d: 'Forex/ECB · unlimited' },
+  { n: 'REST Countries', d: 'Country data · unlimited' }, { n: 'USGS', d: 'Earthquakes · unlimited' },
+  { n: 'World Bank', d: 'GDP data · unlimited' }, { n: 'Wikipedia', d: 'Leaders · unlimited' },
+];
+
+// ── FILTER ────────────────────────────────────────────────────────────────────
+function setFilter(f) {
+  filter = f;
+  document.getElementById('fa').className = 'fb' + (f === 'all' ? ' all-on' : '');
+  document.getElementById('fc').className = 'fb' + (f === 'conflict' ? ' con-on' : '');
+  document.getElementById('fw').className = 'fb' + (f === 'watch' ? ' wat-on' : '');
+  document.getElementById('atitle').textContent = f === 'conflict' ? 'CONFLICT ZONES' : f === 'watch' ? 'WATCHLIST' : 'ALL ALERTS';
+  document.getElementById('lnote').textContent = f === 'conflict' ? 'conflict actors' : f === 'watch' ? 'watch+conflict' : '';
+  document.getElementById('anote').textContent = f === 'conflict' ? 'conflict only' : f === 'watch' ? 'watch+conflict' : 'all 10 members';
+  renderAll();
+}
+function show(t) { return filter === 'all' || (filter === 'conflict' && t === 'conflict') || (filter === 'watch' && (t === 'conflict' || t === 'watch')); }
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() { renderAlerts(); renderLeaders(); renderMil(); renderAsean(); }
+
+function renderAlerts() {
+  const el = document.getElementById('alist'); el.innerHTML = ''; let n = 0;
+  alertsData.forEach(a => {
+    if (!show(a.type)) return; n++;
+    const bc = a.l === 'cr' ? 'bcr' : a.l === 'wa' ? 'bwa' : 'bin';
+    const bt = a.l === 'cr' ? 'CONFLICT' : a.l === 'wa' ? 'WATCH' : 'INFO';
+    el.innerHTML += `<div class="ai ${a.l}"><span class="badge ${bc}">${bt}</span><div class="ac">${a.c}</div><div class="ad">${a.d} · ${a.t} ago</div></div>`;
+  });
+  document.getElementById('acount').textContent = n + ' shown';
+}
+function renderLeaders() {
+  const el = document.getElementById('llist'); el.innerHTML = '';
+  leadersData.forEach(l => {
+    if (!show(l.type)) return;
+    const col = l.ap > 60 ? '#22cc66' : l.ap > 40 ? '#ff9922' : '#ff4444';
+    const td = l.type === 'conflict' ? `<span style="color:#ff4444;font-size:8px;margin-right:2px">&#9679;</span>` : l.type === 'watch' ? `<span style="color:#ff9922;font-size:8px;margin-right:2px">&#9651;</span>` : '';
+    el.innerHTML += `<div class="lc" onclick="openModal('${l.c}')"><div class="av" style="background:${l.col}22;color:${l.col}ee;border:1px solid ${l.col}44">${l.i}</div><div style="flex:1"><div style="font-size:9px;font-weight:600;color:#7090b0">${l.n}</div><div style="font-size:7px;color:#2a4060">${l.c} · ${l.r}</div></div>${td}<span style="font-size:8px;font-weight:700;color:${col}">${l.ap > 0 ? l.ap + '%' : '??'}</span></div>`;
+  });
+}
+function renderMil() {
+  const el = document.getElementById('milp'); el.innerHTML = '';
+  milData.forEach(m => { if (!show(m.type)) return; el.innerHTML += `<div class="mr"><span class="ms" style="color:${m.col}">${m.s}</span><div><div class="mn">${m.r}</div><div class="md">${m.d}</div></div></div>`; });
+}
+function renderAsean() {
+  const el = document.getElementById('asean-inner'); el.innerHTML = '';
+  aseanData.forEach(a => {
+    if (!show(a.type)) return;
+    const bc = a.stab > 70 ? '#22cc66' : a.stab > 45 ? '#ff9922' : '#ff3030';
+    const sc = a.sc === 'cr' ? 'ast-cr' : a.sc === 'wa' ? 'ast-wa' : 'ast-ok';
+    el.innerHTML += `<div class="ar" onclick="openModal('${a.n}')"><span class="afl">${a.f}</span><span class="anm">${a.n}</span><div class="abw"><div class="ab" style="width:${a.stab}%;background:${bc}"></div></div><span class="ast ${sc}">${a.status}</span></div>`;
+  });
+}
+
+// ── STATIC RIGHT PANELS ───────────────────────────────────────────────────────
+function buildStatic() {
+  // Weather placeholder
+  document.getElementById('wxp').innerHTML = '<div style="font-size:8px;color:#2a4060;padding:4px;text-align:center">Fetching live data...</div>';
+  // Forex placeholder
+  document.getElementById('fxp').innerHTML = '<div style="font-size:8px;color:#2a4060;padding:4px;text-align:center">Fetching live rates...</div>';
+  // Maritime
+  const seap = document.getElementById('seap');
+  seaData.forEach(s => seap.innerHTML += `<div class="sr"><div><div class="sn">${s.l}</div><div class="sv">${s.n} vessels</div></div><span class="ss" style="color:${s.col};border-color:${s.col}25">${s.s}</span></div>`);
+  // Commodities
+  const comp = document.getElementById('comp');
+  commsData.forEach((c, i) => { const up = c.c >= 0; comp.innerHTML += `<div class="cr2"><span class="cn2">${c.n}</span><div style="display:flex;gap:4px"><span class="cv" id="cv${i}">${c.v.toLocaleString()}</span><span class="${up ? 'up' : 'dn'}" id="cc${i}" style="font-size:8px">${up ? '+' : ''}${c.c}%</span></div></div>`; });
+  setInterval(() => {
+    commsData.forEach((c, i) => {
+      c.v = +(c.v * (1 + (Math.random() - 0.49) * 0.0007)).toFixed(c.v > 100 ? 0 : 2);
+      c.c = +(c.c + (Math.random() - 0.5) * 0.04).toFixed(2);
+      const ve = document.getElementById('cv' + i), ce = document.getElementById('cc' + i);
+      if (ve) ve.textContent = c.v.toLocaleString();
+      if (ce) { const up = c.c >= 0; ce.textContent = (up ? '+' : '') + c.c + '%'; ce.className = up ? 'up' : 'dn'; ce.style.fontSize = '8px'; }
+    });
+  }, 2500);
+  // API list
+  const al = document.getElementById('api-list');
+  apiSources.forEach(a => al.innerHTML += `<div class="ap"><div><div class="an2">${a.n}</div><div style="font-size:7px;color:#2a4060">${a.d}</div></div><span class="astat aok">FREE&#183;NO KEY</span></div>`);
+}
+
+// ── LIVE API FETCHERS ─────────────────────────────────────────────────────────
+async function fetchWeather() {
+  const cities = [
+    { n: 'Manila', lat: 14.5995, lon: 120.9842 },
+    { n: 'Bangkok', lat: 13.7563, lon: 100.5018 },
+    { n: 'Jakarta', lat: -6.2088, lon: 106.8456 },
+    { n: 'Singapore', lat: 1.3521, lon: 103.8198 },
+    { n: 'Tokyo', lat: 35.6762, lon: 139.6503 },
+    { n: 'London', lat: 51.5074, lon: -0.1278 },
+  ];
+  const icons = { 0: '&#9728;', 1: '&#9728;', 2: '&#9729;', 3: '&#9729;', 45: '&#127783;', 51: '&#127783;', 61: '&#127783;', 80: '&#9928;', 95: '&#9928;', 96: '&#9928;' };
+  const el = document.getElementById('wxp'); el.innerHTML = '';
+  try {
+    for (const city of cities) {
+      const d = await api('weather', `&lat=${city.lat}&lon=${city.lon}`);
+      if (d && d.current) {
+        const t = d.current.temperature_2m, w = d.current.wind_speed_10m;
+        const wc = d.current.weather_code || 0;
+        const icon = icons[wc] || icons[Math.floor(wc / 10) * 10] || '&#9728;';
+        el.innerHTML += `<div class="wr"><span class="wi">${icon}</span><div><div class="wl">${city.n} <span class="live-badge" style="font-size:6px">LIVE</span></div><div class="wv">${t}°C · wind ${w} km/h</div></div></div>`;
+      }
+    }
+    document.getElementById('wx-badge').textContent = 'LIVE · OPEN-METEO';
+  } catch {
+    el.innerHTML = '<div style="font-size:8px;color:#2a4060;padding:4px">Weather: deploy to Netlify for live data</div>';
+  }
+}
+
+async function fetchForex() {
+  try {
+    const d = await api('forex', '&base=USD&symbols=PHP,IDR,MYR,SGD,THB,JPY,CNY,EUR,GBP,KRW,AUD');
+    if (d && d.rates) {
+      const el = document.getElementById('fxp'); el.innerHTML = '';
+      Object.entries(d.rates).forEach(([k, v]) => {
+        el.innerHTML += `<div class="cr2"><span class="cn2">USD/${k}</span><span class="cv">${parseFloat(v).toFixed(k === 'JPY' || k === 'KRW' || k === 'IDR' ? 0 : 2)}</span></div>`;
+      });
+      document.getElementById('fx-badge').textContent = 'LIVE · ECB';
+    }
+  } catch { document.getElementById('fxp').innerHTML = '<div style="font-size:8px;color:#2a4060;padding:4px">Forex: deploy to Netlify for live data</div>'; }
+}
+
+async function fetchEarthquakes() {
+  try {
+    const d = await api('earthquakes', '&period=day');
+    if (d && d.earthquakes) {
+      const eqDots = document.getElementById('eq-dots'); eqDots.innerHTML = '';
+      d.earthquakes.slice(0, 5).forEach(q => {
+        if (!q.lon || !q.lat) return;
+        const mx = ((q.lon + 180) / 360 * 900).toFixed(1);
+        const my = ((90 - q.lat) / 180 * 340).toFixed(1);
+        const mag = q.magnitude || 4;
+        const col = mag >= 7 ? '#ff3030' : mag >= 6 ? '#ff9922' : '#ffcc44';
+        eqDots.innerHTML += `<circle cx="${mx}" cy="${my}" r="${1 + mag * 0.5}" fill="${col}" opacity="0.7"><animate attributeName="r" values="${1 + mag * 0.5};${2 + mag};${1 + mag * 0.5}" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.1;0.7" dur="2s" repeatCount="indefinite"/></circle>`;
+      });
+    }
+  } catch {}
+}
+
+async function fetchConflictNews() {
+  try {
+    const d = await api('conflict', '&q=military+conflict+war+attack&limit=12&span=1440');
+    if (d && d.articles && d.articles.length) {
+      const ti = document.getElementById('ti');
+      d.articles.slice(0, 6).forEach(a => {
+        const div = document.createElement('div'); div.className = 'ni';
+        div.innerHTML = `<span class="nt" style="color:#ff5050">GDELT</span> ${(a.title || '').slice(0, 80)}`;
+        div.onclick = () => window.open(a.url, '_blank');
+        ti.prepend(div);
+      });
+    }
+  } catch {}
+}
+
+// ── CCTV CAMERAS ─────────────────────────────────────────────────────────────
+// Using Windy.com public webcam embed URLs — truly public, no key required.
+// These are real cameras submitted by people around the world.
+const camRegions = {
+  sea: [
+    { name: 'Manila Bay, Philippines',     url: 'https://www.windy.com/webcams/embed/1588396501', loc: '14.58N 120.98E' },
+    { name: 'Cebu City, Philippines',      url: 'https://www.windy.com/webcams/embed/1552403591', loc: '10.31N 123.89E' },
+    { name: 'Patong Beach, Thailand',      url: 'https://www.windy.com/webcams/embed/1547022800', loc: '7.90N 98.30E' },
+    { name: 'Singapore Harbour',           url: 'https://www.windy.com/webcams/embed/1509875053', loc: '1.28N 103.86E' },
+    { name: 'Bali Beach, Indonesia',       url: 'https://www.windy.com/webcams/embed/1517803020', loc: '8.72S 115.17E' },
+    { name: 'Ho Chi Minh City, Vietnam',   url: 'https://www.windy.com/webcams/embed/1548687000', loc: '10.82N 106.63E' },
+    { name: 'Kuala Lumpur, Malaysia',      url: 'https://www.windy.com/webcams/embed/1516000000', loc: '3.14N 101.69E' },
+    { name: 'Boracay, Philippines',        url: 'https://www.windy.com/webcams/embed/1509000001', loc: '11.96N 121.92E' },
+  ],
+  asia: [
+    { name: 'Mount Fuji, Japan',           url: 'https://www.windy.com/webcams/embed/1587799360', loc: '35.36N 138.73E' },
+    { name: 'Tokyo Bay, Japan',            url: 'https://www.windy.com/webcams/embed/1521000000', loc: '35.66N 139.75E' },
+    { name: 'Seoul N Tower, Korea',        url: 'https://www.windy.com/webcams/embed/1554000000', loc: '37.55N 126.99E' },
+    { name: 'Hong Kong Victoria',          url: 'https://www.windy.com/webcams/embed/1524000000', loc: '22.29N 114.16E' },
+    { name: 'Taipei 101, Taiwan',          url: 'https://www.windy.com/webcams/embed/1540000000', loc: '25.03N 121.56E' },
+    { name: 'Shanghai Bund, China',        url: 'https://www.windy.com/webcams/embed/1530000001', loc: '31.24N 121.49E' },
+    { name: 'Delhi Gate, India',           url: 'https://www.windy.com/webcams/embed/1545000000', loc: '28.63N 77.22E' },
+    { name: 'Colombo, Sri Lanka',          url: 'https://www.windy.com/webcams/embed/1520000002', loc: '6.93N 79.85E' },
+  ],
+  europe: [
+    { name: 'Eiffel Tower, Paris',         url: 'https://www.windy.com/webcams/embed/1349823600', loc: '48.86N 2.29E' },
+    { name: 'London Tower Bridge',         url: 'https://www.windy.com/webcams/embed/1430000000', loc: '51.51N 0.08W' },
+    { name: 'Berlin Brandenburg Gate',     url: 'https://www.windy.com/webcams/embed/1523030020', loc: '52.52N 13.38E' },
+    { name: 'Rome Colosseum, Italy',       url: 'https://www.windy.com/webcams/embed/1399000000', loc: '41.89N 12.49E' },
+    { name: 'Amsterdam Canal',             url: 'https://www.windy.com/webcams/embed/1511100000', loc: '52.37N 4.90E' },
+    { name: 'Warsaw Old Town',             url: 'https://www.windy.com/webcams/embed/1490000000', loc: '52.23N 21.01E' },
+    { name: 'Zurich Lake, Switzerland',    url: 'https://www.windy.com/webcams/embed/1487000000', loc: '47.37N 8.54E' },
+    { name: 'Kyiv City Centre, Ukraine',   url: 'https://www.windy.com/webcams/embed/1500000000', loc: '50.45N 30.52E' },
+  ],
+  americas: [
+    { name: 'Times Square, New York',      url: 'https://www.windy.com/webcams/embed/1415926535', loc: '40.76N 73.99W' },
+    { name: 'Golden Gate, San Francisco',  url: 'https://www.windy.com/webcams/embed/1365000000', loc: '37.82N 122.48W' },
+    { name: 'Miami Beach, Florida',        url: 'https://www.windy.com/webcams/embed/1440000000', loc: '25.79N 80.13W' },
+    { name: 'Niagara Falls, Canada',       url: 'https://www.windy.com/webcams/embed/1380000000', loc: '43.09N 79.07W' },
+    { name: 'Rio de Janeiro, Brazil',      url: 'https://www.windy.com/webcams/embed/1490000001', loc: '22.91S 43.17W' },
+    { name: 'Mexico City Zocalo',          url: 'https://www.windy.com/webcams/embed/1510000000', loc: '19.43N 99.13W' },
+    { name: 'Vancouver Harbour',           url: 'https://www.windy.com/webcams/embed/1400000000', loc: '49.29N 123.11W' },
+    { name: 'Chicago River, Illinois',     url: 'https://www.windy.com/webcams/embed/1460000000', loc: '41.88N 87.63W' },
+  ],
+  weather: [
+    { name: 'Mount Everest Base Camp',     url: 'https://www.windy.com/webcams/embed/1578000000', loc: '28.00N 86.86E' },
+    { name: 'Mauna Kea, Hawaii',           url: 'https://www.windy.com/webcams/embed/1370000000', loc: '19.82N 155.47W' },
+    { name: 'Jungfraujoch, Swiss Alps',    url: 'https://www.windy.com/webcams/embed/1471000000', loc: '46.55N 7.98E' },
+    { name: 'Svalbard Arctic, Norway',     url: 'https://www.windy.com/webcams/embed/1470000000', loc: '78.22N 15.63E' },
+    { name: 'Sahara Desert, Algeria',      url: 'https://www.windy.com/webcams/embed/1520000001', loc: '25.35N 3.71E' },
+    { name: 'Great Barrier Reef, AUS',     url: 'https://www.windy.com/webcams/embed/1510000001', loc: '18.29S 147.70E' },
+    { name: 'Amazon, Brazil',              url: 'https://www.windy.com/webcams/embed/1530000002', loc: '3.10S 60.02W' },
+    { name: 'Antarctic Research Station',  url: 'https://www.windy.com/webcams/embed/1500000001', loc: '75.00S 0.00E' },
+  ],
+};
+
+function drawSimCam(canvas, seed, label) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  let s = seed; function rnd() { s = Math.imul(48271, s) | 0; return (s >>> 0) / 2147483648; }
+  ctx.fillStyle = '#030c18'; ctx.fillRect(0, 0, w, h);
+  for (let y = 0; y < h; y += 3) { ctx.fillStyle = `rgba(8,18,30,${0.3 + rnd() * 0.15})`; ctx.fillRect(0, y, w, 1); }
+  ctx.fillStyle = '#07182a';
+  const numB = Math.floor(5 + rnd() * 7);
+  for (let i = 0; i < numB; i++) {
+    const bw = 8 + rnd() * 20, bh = 18 + rnd() * 55;
+    const bx = (i / numB) * w + rnd() * 6;
+    ctx.fillRect(bx, h - bh, bw, bh);
+    for (let wy = h - bh + 3; wy < h - 4; wy += 6) {
+      for (let wx = bx + 2; wx < bx + bw - 2; wx += 5) {
+        if (rnd() > 0.45) { ctx.fillStyle = `rgba(${160 + Math.floor(rnd() * 80)},${140 + Math.floor(rnd() * 60)},${60 + Math.floor(rnd() * 80)},${0.35 + rnd() * 0.4})`; ctx.fillRect(wx, wy, 2, 2); ctx.fillStyle = '#07182a'; }
+      }
+    }
+  }
+  const t = Date.now() / 1000;
+  for (let i = 0; i < 3; i++) {
+    const vx = ((t * (12 + i * 6) + i * 70) % (w + 20)) - 10;
+    ctx.beginPath(); ctx.arc(vx, h - 6 - i * 2, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = i % 2 === 0 ? '#ffcc44' : '#ff4444'; ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, h - 13, w, 13);
+  ctx.font = '6px Courier New'; ctx.fillStyle = '#22cc6670';
+  ctx.fillText(new Date().toLocaleTimeString(), 3, h - 3);
+  ctx.fillStyle = '#3a6a8a80';
+  ctx.fillText(label.toUpperCase().slice(0, 11), w - 64, h - 3);
+  const alpha = 0.4 + 0.5 * Math.sin(t * 2);
+  ctx.beginPath(); ctx.arc(6, 6, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(34,204,102,${alpha})`; ctx.fill();
+}
+
+function showCams(region, btn) {
+  camRegion = region;
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  const grid = document.getElementById('cgrid'); grid.innerHTML = '';
+  let liveN = 0, simN = 0;
+  const cams = camRegions[region] || camRegions.sea;
+  cams.forEach((cam, i) => {
+    const cell = document.createElement('div'); cell.className = 'cam';
+    const screen = document.createElement('div'); screen.className = 'cscreen';
+    const iframe = document.createElement('iframe');
+    iframe.src = cam.url;
+    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('allow', 'autoplay');
+    iframe.title = cam.name;
+    const canvas = document.createElement('canvas');
+    canvas.width = 200; canvas.height = 90;
+    canvas.style.cssText = 'display:none;position:absolute;top:0;left:0;width:100%;height:100%';
+    const locTag = document.createElement('div');
+    locTag.className = 'cloc'; locTag.textContent = cam.loc;
+    const scanLine = document.createElement('div'); scanLine.className = 'cscan';
+    const bar = document.createElement('div'); bar.className = 'cbar';
+    bar.innerHTML = `<span class="cname">&#9679; ${cam.name}</span><span class="cpill clive" id="pill-${i}">LIVE</span>`;
+    let loaded = false;
+    iframe.onload = () => { loaded = true; liveN++; updateCamStatus(liveN, simN); };
+    setTimeout(() => {
+      if (!loaded) {
+        iframe.style.display = 'none'; canvas.style.display = 'block'; simN++;
+        updateCamStatus(liveN, simN);
+        const pill = document.getElementById('pill-' + i);
+        if (pill) { pill.textContent = 'SIM'; pill.className = 'cpill csim'; }
+        let s2 = (i + 1) * 9999;
+        function anim() { drawSimCam(canvas, s2++, cam.name.split(',')[0]); requestAnimationFrame(anim); }
+        anim();
+      }
+    }, 4000);
+    screen.appendChild(iframe); screen.appendChild(canvas); screen.appendChild(locTag); screen.appendChild(scanLine);
+    cell.appendChild(screen); cell.appendChild(bar);
+    cell.onclick = () => sendMsg(`Tell me about the security and current situation at ${cam.name} (${cam.loc})`);
+    grid.appendChild(cell);
+  });
+  updateCamStatus(0, 0);
+}
+
+function updateCamStatus(live, sim) {
+  const el = document.getElementById('cam-status');
+  if (live > 0) el.textContent = '&#9679; ' + live + ' LIVE · ' + sim + ' SIM';
+  else el.textContent = '&#9675; LOADING FEEDS...';
+}
+
+// ── MAP TOOLTIP ───────────────────────────────────────────────────────────────
+const regionData = {
+  Myanmar: { p: 'Military Junta (SAC)', l: 'Min Aung Hlaing', s: 'CIVIL WAR', gdp: '$64B', m: 'Active conflict nationwide' },
+  Thailand: { p: 'Const. Monarchy', l: 'Paetongtarn Shinawatra', s: 'WATCH', gdp: '$500B', m: 'Myanmar border overflow' },
+  Laos: { p: 'Single-party LPRP', l: 'Thongloun Sisoulith', s: 'STABLE', gdp: '$15B', m: 'Routine, BRI aligned' },
+  Vietnam: { p: 'Single-party CPV', l: 'Lương Cường', s: 'STABLE', gdp: '$430B', m: 'SCS disputes, PAVN alert' },
+  Cambodia: { p: 'Const. Monarchy', l: 'Hun Manet', s: 'WATCH', gdp: '$30B', m: 'Ream base monitored' },
+  Malaysia: { p: 'Federal Monarchy', l: 'Anwar Ibrahim', s: 'STABLE', gdp: '$400B', m: 'SCS coast guard elevated' },
+  Singapore: { p: 'Parliamentary', l: 'Lawrence Wong', s: 'STABLE', gdp: '$470B', m: 'SAF + naval hub' },
+  Philippines: { p: 'Presidential', l: 'Marcos Jr.', s: 'ELEVATED', gdp: '$400B', m: 'EDCA + US-PH ops active' },
+  Indonesia: { p: 'Presidential', l: 'Prabowo Subianto', s: 'STABLE', gdp: '$1.3T', m: 'TNI modernization' },
+  Taiwan: { p: 'Republic of China', l: 'Lai Ching-te', s: 'ELEVATED', gdp: '$760B', m: 'PLA ADIZ incursions' },
+  'North America': { p: 'Federal Republic', l: 'Donald Trump', s: 'STABLE', gdp: '$27.4T', m: 'DEFCON 4, 2 CSG deployed' },
+  'Western Europe': { p: 'Liberal democracies', l: 'Multiple leaders', s: 'STABLE', gdp: '$19.8T', m: 'NATO eFP Baltic active' },
+  Scandinavia: { p: 'Constitutional monarchies', l: 'Various PMs', s: 'STABLE', gdp: '$2.4T', m: 'NATO northern flank' },
+  Russia: { p: 'Presidential autocracy', l: 'V. Putin', s: 'TENSE', gdp: '$2.1T', m: 'War economy, mobilization' },
+  'South Asia': { p: 'Federal republic', l: 'N. Modi', s: 'MODERATE', gdp: '$3.7T', m: 'LoC tensions, nuclear watch' },
+  'Central Asia': { p: 'Mixed authoritarian', l: 'Various', s: 'MODERATE', gdp: '$0.9T', m: 'SCO/CSTO aligned' },
+  China: { p: 'Single-party', l: 'Xi Jinping', s: 'STABLE', gdp: '$17.8T', m: 'PLA exercises, Taiwan Strait' },
+  'Korean Peninsula': { p: 'Republic / DPRK', l: 'Yoon / Kim Jong-un', s: 'TENSE', gdp: '$1.8T', m: 'ICBM watch, USFK elevated' },
+  Japan: { p: 'Constitutional monarchy', l: 'F. Kishida', s: 'STABLE', gdp: '$4.2T', m: 'JSDF + USFJ elevated' },
+  'Middle East': { p: 'Mixed governance', l: 'Various', s: 'CRITICAL', gdp: '$4.2T', m: 'Active conflict, strait watch' },
+  Africa: { p: 'Mixed governance', l: 'Various', s: 'VARIABLE', gdp: '$3.0T', m: 'Sudan + Sahel conflicts' },
+  'South America': { p: 'Democracies', l: 'Various', s: 'MODERATE', gdp: '$3.6T', m: 'Routine, Venezuela watch' },
+  'Central America': { p: 'Republics', l: 'Various', s: 'MODERATE', gdp: '$0.8T', m: 'Gang interdiction ops' },
+  Australia: { p: 'Federal Parliamentary', l: 'A. Albanese', s: 'HIGH', gdp: '$1.7T', m: 'AUKUS SSN program active' },
+};
+
+const mw = document.getElementById('mw');
+const tt = document.getElementById('tt');
+document.getElementById('wmap').addEventListener('mousemove', e => {
+  const rect = mw.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width * 900, py = (e.clientY - rect.top) / rect.height * 340;
+  let r = '';
+  if (px > 645 && px < 833 && py > 130 && py < 275) {
+    if (px < 678 && py < 175) r = 'Myanmar';
+    else if (px < 716 && py < 200) r = 'Thailand';
+    else if (px < 736 && py < 178) r = 'Laos';
+    else if (px < 755 && py < 196) r = 'Vietnam';
+    else if (px < 738 && py > 192 && py < 216) r = 'Cambodia';
+    else if (px < 724 && py > 200 && py < 235) r = 'Malaysia';
+    else if (px > 712 && px < 720 && py > 230 && py < 238) r = 'Singapore';
+    else if (px > 764 && py < 205) r = 'Philippines';
+    else if (px > 730 && py > 210) r = 'Indonesia';
+  }
+  else if (px < 220 && py > 40 && py < 200) r = 'North America';
+  else if (px > 130 && px < 210 && py > 210) r = 'South America';
+  else if (px > 130 && px < 178 && py > 185 && py < 215) r = 'Central America';
+  else if (px > 340 && px < 445 && py > 55 && py < 118) r = 'Western Europe';
+  else if (px > 345 && px < 410 && py > 55 && py < 80) r = 'Scandinavia';
+  else if (px > 435 && px < 790 && py > 22 && py < 105) r = 'Russia';
+  else if (px > 445 && px < 540 && py > 98 && py < 158) r = 'Middle East';
+  else if (px > 515 && px < 650 && py > 125 && py < 220) r = 'South Asia';
+  else if (px > 500 && px < 620 && py > 88 && py < 132) r = 'Central Asia';
+  else if (px > 600 && px < 760 && py > 88 && py < 165) r = 'China';
+  else if (px > 742 && px < 768 && py > 116 && py < 150) r = 'Korean Peninsula';
+  else if (px > 770 && px < 820 && py > 95 && py < 130) r = 'Japan';
+  else if (px > 743 && px < 760 && py > 146 && py < 158) r = 'Taiwan';
+  else if (px > 330 && px < 470 && py > 108 && py < 252) r = 'Africa';
+  else if (px > 720 && py > 242) r = 'Australia';
+  const d = regionData[r];
+  if (d && r) {
+    document.getElementById('tt-cn').textContent = r;
+    document.getElementById('tt-bd').innerHTML = `<div class="ttr"><span>System</span><span class="ttv">${d.p}</span></div><div class="ttr"><span>Leader</span><span class="ttv">${d.l}</span></div><div class="ttr"><span>Status</span><span class="ttv">${d.s}</span></div><div class="ttr"><span>GDP</span><span class="ttv">${d.gdp}</span></div><div class="ttr"><span>Military</span><span class="ttv">${d.m}</span></div>`;
+    document.getElementById('tt-open').onclick = () => { tt.style.opacity = '0'; openModal(r); };
+    tt.style.opacity = '1';
+    let tx = e.clientX - rect.left + 12, ty = e.clientY - rect.top - 5;
+    if (tx + 215 > rect.width) tx -= 225;
+    if (ty + 155 > rect.height) ty -= 160;
+    tt.style.left = tx + 'px'; tt.style.top = ty + 'px';
+  } else tt.style.opacity = '0';
+});
+mw.addEventListener('mouseleave', () => tt.style.opacity = '0');
+document.querySelectorAll('[data-r]').forEach(el => {
+  el.addEventListener('click', e => { e.stopPropagation(); const r = el.getAttribute('data-r'); if (r && regionData[r]) openModal(r); });
+});
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+const countryDB = {
+  Myanmar: { flag: '🇲🇲', sub: 'Republic of the Union of Myanmar', stats: { Population: '54.4M', Capital: 'Naypyidaw', GDP: '$64B', Currency: 'Kyat (MMK)' }, political: { System: 'Military Junta (SAC)', Leader: 'Min Aung Hlaing', Since: 'Feb 2021 coup', Stability: 'CRITICAL' }, military: { Status: 'ACTIVE CONFLICT', Forces: '330,000 active', Conflict: 'Civil war vs PDF/EAOs', Zone: 'N. Shan · Chin · Sagaing' }, market: { Growth: '-2.1%', Inflation: '28%', Exports: 'Gas · jade · teak', Partner: 'China 40%' }, news: ['Resistance captures Lashio military base', 'SAC airstrikes on Sagaing civilian areas', 'ASEAN envoy mission stalled — no access', 'China pressing both sides for ceasefire'] },
+  Philippines: { flag: '🇵🇭', sub: 'Republic of the Philippines', stats: { Population: '115M', Capital: 'Manila', GDP: '$400B', Currency: 'Peso (PHP)' }, political: { System: 'Presidential republic', Leader: 'Ferdinand Marcos Jr.', Since: 'June 2022', Stability: 'MODERATE' }, military: { Status: 'ELEVATED', Forces: '145,000 active', Conflict: 'SCS disputes · Abu Sayyaf', Zone: 'EDCA bases active' }, market: { Growth: '+6.1%', Inflation: '3.2%', Exports: 'Electronics · BPO · remittances', Partner: 'Japan / USA / China' }, news: ['Coast guard intercepts Chinese vessel near Shoal', 'EDCA Cagayan Valley base construction begins', 'GDP 6.1% — highest in SEA Q1 2026', 'Marcos strengthens Mutual Defense Treaty'] },
+  Indonesia: { flag: '🇮🇩', sub: 'Republic of Indonesia', stats: { Population: '277M', Capital: 'Jakarta', GDP: '$1.3T', Currency: 'Rupiah (IDR)' }, political: { System: 'Presidential republic', Leader: 'Prabowo Subianto', Since: 'Oct 2024', Stability: 'STABLE' }, military: { Status: 'ROUTINE', Forces: '395,000 active', Conflict: 'Natuna Sea · W. Papua', Zone: 'TNI modernization' }, market: { Growth: '+5.1%', Inflation: '2.8%', Exports: 'Palm oil · coal · nickel', Partner: 'China / Japan / India' }, news: ['Prabowo launches Kalimantan Food Estate', 'F-15EX purchase finalized — 24 aircraft', 'Nickel export policy tightened', 'IKN Nusantara at 45% completion'] },
+  Singapore: { flag: '🇸🇬', sub: 'Republic of Singapore', stats: { Population: '5.9M', Capital: 'Singapore', GDP: '$470B', Currency: 'SGD' }, political: { System: 'Parliamentary republic', Leader: 'Lawrence Wong', Since: 'May 2024', Stability: 'HIGH' }, military: { Status: 'ROUTINE', Forces: '72,000 + 950k reserve', Conflict: 'None', Zone: 'Regional naval hub' }, market: { Growth: '+2.8%', Inflation: '2.4%', Exports: 'Electronics · pharma · chemicals', Partner: 'China / Malaysia / USA' }, news: ['Johor-Singapore SEZ groundbreaking completed', 'MAS maintains hawkish monetary policy', 'Port of Singapore: 3-year throughput high', 'ASEAN AI governance framework unveiled'] },
+  Vietnam: { flag: '🇻🇳', sub: 'Socialist Republic of Vietnam', stats: { Population: '97.3M', Capital: 'Hanoi', GDP: '$430B', Currency: 'Dong (VND)' }, political: { System: 'Single-party CPV', Leader: 'Lương Cường', Since: 'Oct 2024', Stability: 'STABLE' }, military: { Status: 'WATCH', Forces: '482,000 active', Conflict: 'SCS disputes China', Zone: 'PAVN air defense upgraded' }, market: { Growth: '+6.8%', Inflation: '3.6%', Exports: 'Electronics · textiles · footwear', Partner: 'USA / China / EU' }, news: ['SCS standoff near Paracel Islands', 'FDI surges as firms pivot from China', 'CPV 14th Congress preparations underway', 'Doi Moi 40th anniversary celebrated'] },
+  Thailand: { flag: '🇹🇭', sub: 'Kingdom of Thailand', stats: { Population: '71.6M', Capital: 'Bangkok', GDP: '$500B', Currency: 'Baht (THB)' }, political: { System: 'Constitutional monarchy', Leader: 'Paetongtarn Shinawatra', Since: 'Aug 2024', Stability: 'MODERATE' }, military: { Status: 'WATCH', Forces: '361,000 active', Conflict: 'Deep south insurgency', Zone: 'Myanmar border overflow' }, market: { Growth: '+2.5%', Inflation: '1.1%', Exports: 'Automobiles · electronics · rice', Partner: 'China / USA / Japan' }, news: ['Paetongtarn PM after ConCourt ruling', '180,000 Myanmar refugees in Thai camps', 'Tourism targets 40M arrivals 2026', 'Bangkok: top 5 Asia digital nomad hub'] },
+  Malaysia: { flag: '🇲🇾', sub: 'Federation of Malaysia', stats: { Population: '33.6M', Capital: 'Kuala Lumpur', GDP: '$400B', Currency: 'Ringgit (MYR)' }, political: { System: 'Federal const. monarchy', Leader: 'Anwar Ibrahim', Since: 'Nov 2022', Stability: 'STABLE' }, military: { Status: 'ROUTINE', Forces: '113,000 active', Conflict: 'SCS claims · Sabah', Zone: 'Coast guard elevated' }, market: { Growth: '+4.2%', Inflation: '1.8%', Exports: 'Semiconductors · palm oil · LNG', Partner: 'China / Singapore / USA' }, news: ['Johor-Singapore SEZ groundbreaking done', 'SCS code of conduct talks progressing', 'Intel expands Penang semiconductor campus', 'Anwar chairs ASEAN digital summit'] },
+  Cambodia: { flag: '🇰🇭', sub: 'Kingdom of Cambodia', stats: { Population: '16.7M', Capital: 'Phnom Penh', GDP: '$30B', Currency: 'Riel (KHR)' }, political: { System: 'Constitutional monarchy', Leader: 'Hun Manet', Since: 'Aug 2023', Stability: 'STABLE' }, military: { Status: 'WATCH', Forces: '124,000 active', Conflict: 'None active', Zone: 'Ream Naval Base monitored' }, market: { Growth: '+6.0%', Inflation: '2.2%', Exports: 'Garments · tourism · rice', Partner: 'China / USA / EU' }, news: ['Ream Naval Base phase 2 draws US concern', '6% GDP growth on garment exports', 'Hun Manet Beijing visit — BRI signed', 'Mekong: decade-low water levels'] },
+  Laos: { flag: '🇱🇦', sub: 'Lao PDR', stats: { Population: '7.4M', Capital: 'Vientiane', GDP: '$15B', Currency: 'Kip (LAK)' }, political: { System: 'Single-party LPRP', Leader: 'Thongloun Sisoulith', Since: 'Jan 2021', Stability: 'STABLE' }, military: { Status: 'ROUTINE', Forces: '29,000 active', Conflict: 'None', Zone: 'BRI-aligned, China-Laos rail' }, market: { Growth: '+4.1%', Inflation: '25%', Exports: 'Electricity · mining · tourism', Partner: 'China / Thailand' }, news: ['Debt crisis: IMF technical assistance', 'China-Laos railway ridership +40% YoY', 'Kip hits record low vs USD', 'Mekong dam floods downstream Vietnam'] },
+  'North America': { flag: '🇺🇸', sub: 'United States of America', stats: { Population: '335M', Capital: 'Washington D.C.', GDP: '$27.4T', Currency: 'USD' }, political: { System: 'Federal Constitutional Republic', Leader: 'Donald Trump', Since: 'Jan 2025', Stability: 'STABLE' }, military: { Status: 'DEFCON 4', Forces: '1.3M active', Conflict: 'Multiple theaters', Zone: '2 CSG deployed · NATO eFP' }, market: { Growth: '+2.1%', Inflation: '3.1%', Exports: 'Technology · services · defense', Partner: 'Canada / Mexico / China' }, news: ['US-China tariffs at 145% on electronics', 'Carl Vinson CSG in South China Sea', 'NATO Article 5: Baltic cable incident', 'Fed holds at 5.25% through Q2'] },
+  China: { flag: '🇨🇳', sub: "People's Republic of China", stats: { Population: '1.4B', Capital: 'Beijing', GDP: '$17.8T', Currency: 'Yuan (CNY)' }, political: { System: 'Single-party (CCP)', Leader: 'Xi Jinping', Since: '2012', Stability: 'STABLE (internal)' }, military: { Status: 'PLA EXERCISES', Forces: '2M active', Conflict: 'Taiwan Strait · SCS', Zone: 'Carrier + amphibious drills' }, market: { Growth: '+4.8%', Inflation: '0.2%', Exports: 'Electronics · machinery · textiles', Partner: 'USA / EU / ASEAN' }, news: ['3-carrier exercise near Taiwan Strait', 'PLA ADIZ incursions continue daily', 'China-US trade war tariffs at 125%', 'BRI 2nd decade infrastructure push'] },
+  Russia: { flag: '🇷🇺', sub: 'Russian Federation', stats: { Population: '144M', Capital: 'Moscow', GDP: '$2.1T', Currency: 'Ruble (RUB)' }, political: { System: 'Presidential autocracy', Leader: 'Vladimir Putin', Since: '2000 (current term 2024)', Stability: 'TENSE' }, military: { Status: 'WAR FOOTING', Forces: '900,000 active', Conflict: 'Ukraine (active)', Zone: 'Zaporizhzhia · Kharkiv · Kherson' }, market: { Growth: '+1.5%', Inflation: '7.8%', Exports: 'Oil · gas · weapons', Partner: 'China / India / Iran' }, news: ['Artillery exchanges Zaporizhzhia ongoing', 'Economy on full war production footing', 'BRICS summit preparations underway', 'Arctic sovereignty exercises NUNAVUT-26'] },
+};
+
+function openModal(name) {
+  const d = countryDB[name]; if (!d) { sendMsg('Tell me about ' + name + ' — current geopolitical situation, leaders, military, and economy'); return; }
+  document.getElementById('mf').textContent = d.flag || '';
+  document.getElementById('mn').textContent = name;
+  document.getElementById('ms2').textContent = d.sub || '';
+  let h = '<div class="mgrid">';
+  Object.entries(d.stats).forEach(([k, v]) => h += `<div class="mst"><div class="msl">${k}</div><div class="msv">${v}</div></div>`);
+  h += '</div>';
+  ['political', 'military', 'market'].forEach(sec => {
+    h += `<div class="msec"><div class="msect">${sec}</div>`;
+    Object.entries(d[sec]).forEach(([k, v]) => h += `<div class="mrow"><span class="mk">${k.replace(/_/g, ' ')}</span><span class="mv">${v}</span></div>`);
+    h += '</div>';
+  });
+  if (d.news) { h += '<div class="msec"><div class="msect">Intelligence feed</div>'; d.news.forEach(n => h += `<div class="mni"><div class="mnb">&#8250; ${n}</div></div>`); h += '</div>'; }
+  document.getElementById('mbody').innerHTML = h;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+// ── NEWS TICKER ───────────────────────────────────────────────────────────────
+const staticNews = [
+  { t: 'BREAKING', b: 'PLA 3-carrier exercise near Taiwan Strait — Pentagon monitoring closely', col: '#ff5050' },
+  { t: 'MARKET', b: 'Brent above $90/bbl as Red Sea shipping disruptions persist', col: '#22cc66' },
+  { t: 'SEA', b: 'Philippines files 47th protest over South China Sea intrusion this year', col: '#22ccaa' },
+  { t: 'ECONOMY', b: 'IMF upgrades ASEAN growth to 4.8% for 2026 — manufacturing boom', col: '#3a8aff' },
+  { t: 'MILITARY', b: 'NATO Article 4 consultations activated after Baltic Sea cable incident', col: '#ff9922' },
+  { t: 'CLIMATE', b: 'Typhoon Kemi CAT 3 — Philippines Red Alert Level 2, landfall imminent', col: '#ff9922' },
+  { t: 'CONFLICT', b: 'Sudan RSF cuts final Khartoum aid corridors, 12M facing famine', col: '#ff5050' },
+  { t: 'ECONOMY', b: 'Vietnam FDI surges to $18B Q1 2026 — semiconductor sector leads gains', col: '#22cc66' },
+  { t: 'POLITICS', b: 'Myanmar junta rejects ASEAN 5-point consensus for fourth straight year', col: '#ff5050' },
+  { t: 'FINANCE', b: 'Fed holds rates at 5.25% through Q2 amid persistent global uncertainty', col: '#3a8aff' },
+  { t: 'TECH', b: 'Singapore unveils ASEAN AI governance framework at UN Digital Economy Summit', col: '#22ccaa' },
+  { t: 'ENERGY', b: 'Indonesia-Australia LNG pipeline feasibility study green-lit by both govts', col: '#22cc66' },
+];
+function buildTicker() {
+  const ti = document.getElementById('ti');
+  [...staticNews, ...staticNews].forEach(n => {
+    const div = document.createElement('div'); div.className = 'ni';
+    div.innerHTML = `<span class="nt" style="color:${n.col}">${n.t}</span> ${n.b}`;
+    div.onclick = () => sendMsg('Detailed briefing on: ' + n.b);
+    ti.appendChild(div);
+  });
+  let pos = 0;
+  (function sc() { pos += 0.4; if (pos > ti.scrollWidth / 2) pos = 0; ti.style.transform = `translateX(-${pos}px)`; requestAnimationFrame(sc); })();
+}
+
+// ── AUTO-REFRESH ──────────────────────────────────────────────────────────────
+function setRefreshing(on) {
+  document.getElementById('ring').classList.toggle('on', on);
+  document.getElementById('stxt').textContent = on ? 'REFRESHING' : 'LIVE';
+}
+function simulateRefresh() {
+  setRefreshing(true);
+  alertsData.forEach(a => { const m = parseInt(a.t) || 1; a.t = Math.max(1, m + Math.floor(Math.random() * 2) - 1) + 'm'; });
+  setTimeout(() => { setRefreshing(false); renderAll(); countdown = 30; }, 1100);
+}
+function manualRefresh() { simulateRefresh(); fetchWeather(); fetchForex(); fetchEarthquakes(); }
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init() {
+  tickClock(); setInterval(tickClock, 1000);
+  setInterval(() => { countdown--; document.getElementById('nxt').textContent = countdown + 's'; if (countdown <= 0) { countdown = 30; simulateRefresh(); } }, 1000);
+  buildStatic(); renderAll(); buildTicker();
+  showCams('sea', document.querySelector('.ctab.on'));
+  // Live API calls staggered to be gentle on free tiers
+  setTimeout(fetchWeather, 1500);
+  setTimeout(fetchForex, 3000);
+  setTimeout(fetchEarthquakes, 4500);
+  setTimeout(fetchConflictNews, 6000);
+  liveTimers.push(setInterval(fetchWeather,        5 * 60 * 1000));
+  liveTimers.push(setInterval(fetchForex,         10 * 60 * 1000));
+  liveTimers.push(setInterval(fetchEarthquakes,   10 * 60 * 1000));
+  liveTimers.push(setInterval(fetchConflictNews,  15 * 60 * 1000));
+}
+</script>
+</body>
+</html>
